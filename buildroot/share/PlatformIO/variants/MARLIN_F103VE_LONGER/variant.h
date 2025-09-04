@@ -139,22 +139,15 @@ extern "C" {
 #define PIN_SERIAL2_TX          PA2
 
 // Extra HAL modules
-#ifdef STM32F103xE
-#ifndef HAL_DAC_MODULE_ENABLED
-  //#define HAL_DAC_MODULE_ENABLED (unused or maybe for the eeprom write?)
-#endif
-#ifndef HAL_SD_MODULE_ENABLED
-  #define HAL_SD_MODULE_ENABLED
-#endif
-#ifndef HAL_SRAM_MODULE_ENABLED
-  #define HAL_SRAM_MODULE_ENABLED
-#endif
+#if defined(STM32F103xE)
+//#define HAL_DAC_MODULE_ENABLED (unused or maybe for the eeprom write?)
+#define HAL_SD_MODULE_ENABLED
+#define HAL_SRAM_MODULE_ENABLED
 #endif
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
-
 /*----------------------------------------------------------------------------
  *        Arduino objects - C++ only
  *----------------------------------------------------------------------------*/

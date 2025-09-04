@@ -4,15 +4,15 @@
 #
 import pioutil
 if pioutil.is_pio_build():
-    import struct, uuid, marlin
-
-    board = pioutil.env.BoardConfig()
+    import os,random,struct,uuid,marlin
+    # Relocate firmware from 0x08000000 to 0x08008800
+    marlin.relocate_firmware("0x08008800")
 
     def calculate_crc(contents, seed):
-        accumulating_xor_value = seed
+        accumulating_xor_value = seed;
 
         for i in range(0, len(contents), 4):
-            value = struct.unpack("<I", contents[i : i + 4])[0]
+            value = struct.unpack('<I', contents[ i : i + 4])[0]
             accumulating_xor_value = accumulating_xor_value ^ value
         return accumulating_xor_value
 
@@ -29,12 +29,12 @@ if pioutil.is_pio_build():
         # This is the block counter
         block_number = xor_seed * block_number
 
-        # load the xor key from the file
-        r7 = file_key
+        #load the xor key from the file
+        r7 =  file_key
 
         for loop_counter in range(0, block_size):
             # meant to make sure different bits of the key are used.
-            xor_seed = loop_counter // key_length
+            xor_seed = int(loop_counter / key_length)
 
             # IP is a scratch register / R12
             ip = loop_counter - (key_length * xor_seed)
@@ -54,10 +54,10 @@ if pioutil.is_pio_build():
             # and then with IP
             xor_seed = xor_seed ^ ip
 
-            # Now store the byte back
+            #Now store the byte back
             r1[loop_counter] = xor_seed & 0xFF
 
-            # increment the loop_counter
+            #increment the loop_counter
             loop_counter = loop_counter + 1
 
     def encrypt_file(input, output_file, file_length):
@@ -68,7 +68,7 @@ if pioutil.is_pio_build():
         uid_value = uuid.uuid4()
         file_key = int(uid_value.hex[0:8], 16)
 
-        xor_crc = 0xEF3D4323
+        xor_crc = 0xEF3D4323;
 
         # the input file is exepcted to be in chunks of 0x800
         # so round the size
@@ -82,15 +82,15 @@ if pioutil.is_pio_build():
         # write the file_key
         output_file.write(struct.pack("<I", file_key))
 
-        # TODO: - how to enforce that the firmware aligns to block boundaries?
-        block_count = len(input_file) // block_size
-        print("Block Count is ", block_count)
+        #TODO - how to enforce that the firmware aligns to block boundaries?
+        block_count = int(len(input_file) / block_size)
+        print ("Block Count is ", block_count)
         for block_number in range(0, block_count):
-            block_offset = block_number * block_size
+            block_offset = (block_number * block_size)
             block_end = block_offset + block_size
-            block_array = bytearray(input_file[block_offset:block_end])
+            block_array = bytearray(input_file[block_offset: block_end])
             xor_block(block_array, block_array, block_number, block_size, file_key)
-            for n in range(0, block_size):
+            for n in range (0, block_size):
                 input_file[block_offset + n] = block_array[n]
 
             # update the expected CRC value.
@@ -105,22 +105,13 @@ if pioutil.is_pio_build():
 
     # Encrypt ${PROGNAME}.bin and save it as 'update.cbd'
     def encrypt(source, target, env):
-        from pathlib import Path
+        firmware = open(target[0].path, "rb")
+        update = open(target[0].dir.path + '/update.cbd', "wb")
+        length = os.path.getsize(target[0].path)
 
-        fwpath = Path(target[0].path)
-        fwsize = fwpath.stat().st_size
+        encrypt_file(firmware, update, length)
 
-        enname = board.get("build.crypt_chitu")
-        enpath = Path(target[0].dir.path)
+        firmware.close()
+        update.close()
 
-        fwfile = fwpath.open("rb")
-        enfile = (enpath / enname).open("wb")
-
-        print(f"Encrypting {fwpath} to {enname}")
-        encrypt_file(fwfile, enfile, fwsize)
-        fwfile.close()
-        enfile.close()
-        fwpath.unlink()
-
-    marlin.relocate_firmware("0x08008800")
-    marlin.add_post_action(encrypt)
+    marlin.add_post_action(encrypt);

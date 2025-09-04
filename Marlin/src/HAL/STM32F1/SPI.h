@@ -33,17 +33,6 @@
 #include <stdint.h>
 #include <wirish.h>
 
-#include "../../core/macros.h"  // for PIN_EXISTS
-
-// Number of SPI ports
-#if PIN_EXISTS(BOARD_SPI3_SCK)
-  #define BOARD_NR_SPI 3
-#elif PIN_EXISTS(BOARD_SPI2_SCK)
-  #define BOARD_NR_SPI 2
-#elif PIN_EXISTS(BOARD_SPI1_SCK)
-  #define BOARD_NR_SPI 1
-#endif
-
 // SPI_HAS_TRANSACTION means SPI has
 //   - beginTransaction()
 //   - endTransaction()
@@ -60,7 +49,7 @@
 #define SPI_CLOCK_DIV128 SPI_BAUD_PCLK_DIV_128
 #define SPI_CLOCK_DIV256 SPI_BAUD_PCLK_DIV_256
 
-/**
+/*
  * Roger Clark. 20150106
  * Commented out redundant AVR defined
  *
@@ -155,7 +144,7 @@ private:
   friend class SPIClass;
 };
 
-/**
+/*
  * Kept for compat.
  */
 static const uint8_t ff = 0xFF;
@@ -235,7 +224,7 @@ public:
   void onReceive(void(*)());
   void onTransmit(void(*)());
 
-  /**
+  /*
    * I/O
    */
 
@@ -316,7 +305,7 @@ public:
   uint8_t dmaSendRepeat(uint16_t length);
 
   uint8_t dmaSendAsync(const void * transmitBuf, uint16_t length, bool minc = 1);
-  /**
+  /*
    * Pin accessors
    */
 
@@ -400,7 +389,7 @@ private:
 
   void updateSettings();
 
-  /**
+  /*
    * Functions added for DMA transfers with Callback.
    * Experimental.
    */
